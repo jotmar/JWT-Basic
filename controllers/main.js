@@ -19,11 +19,24 @@ const login = async (req, res) => {
 }
 
 const dashboard = async (req, res) => {
-  const secretNumber = Math.floor(Math.random() * 100)
-  res.status(200).json({
-    msg: 'Hello John',
-    secret: `Authorized, here is your secret number: ${secretNumber}`
-  })
+  const authHeader = req.headers.authorization
+  const token = authHeader.split(' ')[1]
+  console.log(token)
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    throw new CustomError('No token was given', 401)
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    console.log(decoded)
+    const secretNumber = Math.floor(Math.random() * 100)
+    res.status(200).json({
+      msg: `Hello, ${decoded.username}`,
+      secret: `Authorized, here is your secret number: ${secretNumber}`
+    })
+  } catch (error) {
+    throw new CustomError('Invalid Token!', 401)
+  }
 }
 
 module.exports = { login, dashboard }
